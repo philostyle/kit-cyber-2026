@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Kit Cyber 2026 — Un guide contemporain pour protéger son identité numérique</title>
+<meta name="description" content="35 gestes simples pour reprendre la main sur sa vie numérique. Une publication éditoriale gratuite par Afifia Belabdoun." />
+<meta name="author" content="Afifia Belabdoun" />
+<meta property="og:title" content="Kit Cyber 2026" />
+<meta property="og:description" content="Un guide contemporain pour protéger son identité numérique." />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#f3efe6" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="desktop.css" />
+
+<style>
+  /* Site shell — overrides the phone-frame styles from styles.css */
+  html, body {
+    margin: 0; padding: 0;
+    height: auto;
+    background: var(--paper, #f3efe6);
+    color: var(--ink, #0b0b0d);
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    display: block;
+    align-items: initial;
+    justify-content: initial;
+    min-height: auto;
+    overflow-y: auto;
+  }
+  #site-root {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  /* Better focus rings */
+  :focus-visible {
+    outline: 2px solid var(--accent, #c9442a);
+    outline-offset: 2px;
+  }
+
+  /* Site-specific cover sizing — fill viewport on phone */
+  .cover {
+    min-height: 100vh !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  /* Hide the floating "X cochées" pill (per brief: no aggressive progress UI) */
+  .done-pill { display: none !important; }
+
+  /* Make the hero scroll-cue stick to the bottom less aggressively on site */
+  .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; }
+
+  /* Tweak: lexique full-width breathing on desktop */
+  body.desktop .lexique .lex-list { margin-top: 24px; }
+</style>
+</head>
+<body data-theme="light">
+
+<div id="site-root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+
+<script type="text/babel">
+function waitFor(predicate, timeout = 8000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    (function tick() {
+      if (predicate()) return resolve();
+      if (Date.now() - start > timeout) return reject(new Error('timeout'));
+      setTimeout(tick, 50);
+    })();
+  });
+}
+
+(async () => {
+  try { await waitFor(() => window.KitApp && window.KIT_DATA); } catch { return; }
+
+  // Responsive: toggle body.desktop class based on viewport width.
+  // Desktop styles kick in at 1024px+ (tablets get mobile layout for readability).
+  const DESKTOP_BREAKPOINT = 1024;
+  const setMode = () => {
+    document.body.classList.toggle('desktop', window.innerWidth >= DESKTOP_BREAKPOINT);
+  };
+  setMode();
+  let resizeTO;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTO);
+    resizeTO = setTimeout(setMode, 120);
+  });
+
+  function SiteApp() {
+    // The App component expects a scrollRef — give it the window scroll element.
+    const scrollRef = React.useRef(null);
+    React.useEffect(() => {
+      scrollRef.current = document.scrollingElement || document.documentElement;
+    }, []);
+    const App = window.KitApp;
+    return <App scrollRef={scrollRef} />;
+  }
+
+  ReactDOM.createRoot(document.getElementById('site-root')).render(<SiteApp />);
+
+  // After mount, wrap multi-column groups for errors + resources (desktop layout helper)
+  await new Promise(r => setTimeout(r, 500));
+  const wrapGroups = (containerSel, wrapClass) => {
+    const c = document.querySelector(containerSel);
+    if (!c || c.querySelector('.' + wrapClass)) return;
+    const children = Array.from(c.children);
+    const groupNodes = children.filter((el) =>
+      el.querySelector?.('.err-group-label') || el.classList.contains('res-group')
+    );
+    if (!groupNodes.length) return;
+    const wrap = document.createElement('div');
+    wrap.className = wrapClass;
+    groupNodes.forEach((n) => {
+      if (n.querySelector?.('.err-group-label')) n.classList.add('err-group');
+      wrap.appendChild(n);
+    });
+    c.appendChild(wrap);
+  };
+  wrapGroups('.errors', 'errors-groups');
+  wrapGroups('.resources', 'resources-groups');
+
+  // ──────────────────────────────────────────────────────────────
+  // Light analytics hooks — picked up by Vercel Analytics if loaded.
+  // Tracks: section reached + download clicks. No PII, no cookies.
+  // ──────────────────────────────────────────────────────────────
+  const track = (name, props = {}) => {
+    if (window.va) window.va('event', { name, ...props });
+    // Also fire a CustomEvent for any future listeners
+    window.dispatchEvent(new CustomEvent('kit:event', { detail: { name, ...props } }));
+  };
+
+  // Download clicks
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-analytics]');
+    if (a) track(a.dataset.analytics);
+  });
+
+  // Scroll depth — fire once per section as it crosses 50% viewport
+  const seen = new Set();
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((ent) => {
+      if (!ent.isIntersecting) return;
+      const label = ent.target.dataset.screenLabel || ent.target.id;
+      if (label && !seen.has(label)) {
+        seen.add(label);
+        track('section-view', { section: label });
+      }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-screen-label]').forEach((el) => io.observe(el));
+})();
+</script>
+
+<!-- Vercel Analytics — auto-tracks pageviews + the custom events fired via window.va() -->
+<script defer src="/_vercel/insights/script.js"></script>
+
+</body>
+</html>
